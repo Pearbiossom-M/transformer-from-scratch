@@ -421,7 +421,7 @@ def create_causal_mask(size):
 ## 10. 完整代码和测试示例
 把以上拼起来就是一个完整的 Transformer。
 
-**完整代码：**见于 `./transformer-from-scratch.py`
+**完整代码**：见于 `./transformer-from-scratch.py`
 
 测试示例：
 
