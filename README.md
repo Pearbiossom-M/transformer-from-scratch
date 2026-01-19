@@ -54,6 +54,7 @@ Transformer 不像 RNN 有顺序信息，所以需要位置编码来注入序列
 - 词嵌入：将 token ID 映射到 d_model 维向量。
 
 - 位置编码：使用正弦/余弦函数生成位置向量，公式：
+  
   $$
   PE_{(pos, 2i)} = \sin\left(\frac{pos}{10000^{2i/d_{model}}}\right)
   $$
@@ -120,6 +121,7 @@ input_emb = pos_enc(embed_layer(input_tokens))
   - 输入：Query (Q), Key (K), Value (V)，形状 (batch, num_heads, seq_len, d_k)；
   
   - 计算：
+  
     $$
     Attention = \mathrm{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
     $$
@@ -200,6 +202,7 @@ class MultiHeadAttention(nn.Module):
 - 两层线性：第一层扩展到 d_ff（2048），ReLU 激活，然后压缩回 d_model。（现代模型中常常使用 GELU 和 SWiGLU 代替 ReLU）
 
 - 公式：
+
   $$
   FFN(x) = max(0,xW1 + b1)W2+b2
   $$
@@ -232,9 +235,11 @@ class FeedForward(nn.Module):
 * 残差连接的核心作用，是在反向传播中提供一条**无条件的梯度高速通道**，使梯度可以在深层网络中稳定传播，而不依赖于子层的具体行为。
 
   然而，在 **Post-LN 结构中**：
+
   $$
   x_{l+1} = \mathrm{LN}(x_l + F(x_l))
   $$
+
   残差路径上的梯度**必须经过 LayerNorm 的 Jacobian**。
 
   这意味着：
@@ -246,9 +251,11 @@ class FeedForward(nn.Module):
   因此，Post-LN 并非“完全截断”梯度，而是**破坏了“恒等映射”这一残差网络最核心的结构假设**，在深层堆叠时导致梯度逐层衰减或不稳定。
 
 * 相比之下，在 **Pre-LN** 结构中：
+
   $$
   x_{l+1} = x_l + F(\mathrm{LN}(x_l))
   $$
+
   残差分支在前向传播中保持为恒等映射，在反向传播中提供一条**不经过子层和归一化的直接梯度通道**：
 
   * 梯度可以绕过 LayerNorm 和子层直接传播；
