@@ -52,13 +52,16 @@ Transformer 不像 RNN 有顺序信息，所以需要位置编码来注入序列
 
 **原理：**
 - 词嵌入：将 token ID 映射到 d_model 维向量。
+
 - 位置编码：使用正弦/余弦函数生成位置向量，公式：
-  \[
+  $$
   PE_{(pos, 2i)} = \sin\left(\frac{pos}{10000^{2i/d_{model}}}\right)
-  \]
-  \[
+  $$
+
+  $$
   PE_{(pos, 2i+1)} = \cos\left(\frac{pos}{10000^{2i/d_{model}}}\right)
-  \]
+  $$
+
   其中 pos 是位置，i 是维度索引。正弦/余弦位置编码本质是**绝对位置编码**，但由于其函数形式具有可加性，模型在一定程度上可以通过线性组合间接推断相对位置信息；但这并非显式的相对位置建模。后续如 **RoPE、ALiBi** 才是明确引入相对位置信息的设计。
 
 **代码实现：**
@@ -118,7 +121,7 @@ input_emb = pos_enc(embed_layer(input_tokens))
   
   - 计算：
     $$
-    Attention = softmax(\frac{QK^T}{sqrt(d_k)}) V
+    Attention = \mathrm{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
     $$
     
   
