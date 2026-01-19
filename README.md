@@ -55,13 +55,9 @@ Transformer 不像 RNN 有顺序信息，所以需要位置编码来注入序列
 
 - 位置编码：使用正弦/余弦函数生成位置向量，公式：
   
-  $$
-  PE_{(pos, 2i)} = \sin\left(\frac{pos}{10000^{2i/d_{model}}}\right)
-  $$
-
-  $$
-  PE_{(pos, 2i+1)} = \cos\left(\frac{pos}{10000^{2i/d_{model}}}\right)
-  $$
+  <img src="images/pe-sin.jpg" style="zoom:50%;" />
+  
+  <img src="images/pe-cos.jpg" style="zoom:50%;" />
 
   其中 pos 是位置，i 是维度索引。正弦/余弦位置编码本质是**绝对位置编码**，但由于其函数形式具有可加性，模型在一定程度上可以通过线性组合间接推断相对位置信息；但这并非显式的相对位置建模。后续如 **RoPE、ALiBi** 才是明确引入相对位置信息的设计。
 
@@ -121,9 +117,9 @@ input_emb = pos_enc(embed_layer(input_tokens))
   - 输入：Query (Q), Key (K), Value (V)，形状 (batch, num_heads, seq_len, d_k)；
   
   - 计算：
-    $$
-    Attention = \mathrm{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
-    $$
+    
+    <img src="images/attention.jpg" style="zoom:50%;" />
+    
     其中 d_k = d_model / num_heads，除以 $\sqrt{d_k}$ 是为了防止点积随维度增大而方差过大，导致 softmax 输出分布过于尖锐、训练不稳定。
   
 - 多头：将 d_model 分成 num_heads 个头，每个头独立计算，然后 concat 并线性投影。
@@ -199,10 +195,8 @@ class MultiHeadAttention(nn.Module):
 - 两层线性：第一层扩展到 d_ff（2048），ReLU 激活，然后压缩回 d_model。（现代模型中常常使用 GELU 和 SWiGLU 代替 ReLU）
 
 - 公式：
-  $$
-  FFN(x) = max(0,xW1 + b1)W2+b2
-  $$
   
+  <img src="images/FFN.jpg" style="zoom:50%;" />
 
 **代码实现：**
 
@@ -231,9 +225,9 @@ class FeedForward(nn.Module):
 * 残差连接的核心作用，是在反向传播中提供一条**无条件的梯度高速通道**，使梯度可以在深层网络中稳定传播，而不依赖于子层的具体行为。
 
   然而，在 **Post-LN 结构中**：
-  $$
-  x_{l+1} = \mathrm{LN}(x_l + F(x_l))
-  $$
+
+  <img src="images/post-LN.jpg" style="zoom:50%;" />
+
   残差路径上的梯度**必须经过 LayerNorm 的 Jacobian**。
 
   这意味着：
@@ -245,9 +239,9 @@ class FeedForward(nn.Module):
   因此，Post-LN 并非“完全截断”梯度，而是**破坏了“恒等映射”这一残差网络最核心的结构假设**，在深层堆叠时导致梯度逐层衰减或不稳定。
 
 * 相比之下，在 **Pre-LN** 结构中：
-  $$
-  x_{l+1} = x_l + F(\mathrm{LN}(x_l))
-  $$
+  
+  <img src="images/pre-LN.jpg" style="zoom:50%;" />
+  
   残差分支在前向传播中保持为恒等映射，在反向传播中提供一条**不经过子层和归一化的直接梯度通道**：
 
   * 梯度可以绕过 LayerNorm 和子层直接传播；
